@@ -8,12 +8,18 @@ import os
 class PretrainDataset(Dataset):
     def __init__(self, args):
         # read data
-        filepath = '../data/processed/'+args.dataset+'.pkl'
+        filepath = '/zfsauton2/home/mingzhul/time-series-prompt/data/'+args.dataset+'.pkl'
+        
+        
+        
+        # filepath = 'data/processed/'+args.dataset+'.pkl'
         data, _, train_ids, val_ids, test_ids = pickle.load(open(filepath,'rb'))
         args.logger.write('\nPreparing dataset '+args.dataset)
         static_varis = self.get_static_varis(args.dataset)
         if args.dataset=='mimic_iii':
             data = data.loc[(data.minute>=0)&(data.minute<=5*24*60)]
+            # TODO: only do first 48 hrs?
+            # data = data.loc[(data.minute>=0)&(data.minute<=48*60)]
             data.loc[(data.variable=='Age')&(data.value>200), 'value'] = 91.4
             self.max_minute = 24*60
         elif args.dataset=='physionet_2012':
@@ -97,7 +103,7 @@ class PretrainDataset(Dataset):
                 if curr_times[ix]==t1:
                     t1_ix = ix+1 # start of prediction window
                     break
-            t0_ix = max(0,t1_ix-self.max_obs)
+            t0_ix = max(0,t1_ix-self.max_obs)  # t1_ix: index for obs window
             if self.args.dataset=='mimic_iii': # obs window max length is 24 hrs
                 while curr_times[t0_ix]<t1-self.max_minute:
                     t0_ix += 1

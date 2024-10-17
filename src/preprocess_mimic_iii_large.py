@@ -848,6 +848,15 @@ def f(x):
 events['TABLE'] = events['TABLE'].apply(f)
 
 # Save data.
-os.makedirs('../data/processed', exist_ok=True)
+# os.makedirs('../data/processed', exist_ok=True)
+os.makedirs('/home/scratch/mingzhul/data/processed', exist_ok=True)
 pickle.dump([events, oc, train_ids, valid_ids, test_ids], 
-            open('../data/processed/mimic_iii.pkl','wb'))
+            # open('../data/processed/mimic_iii.pkl','wb'))
+            open('/home/scratch/mingzhul/data/processed/mimic_iii.pkl','wb'))
+
+
+
+
+
+
+

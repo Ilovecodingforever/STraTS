@@ -29,29 +29,29 @@ cd src/
 
 
 # Strats mimic_iii
-# python main.py --seed 0 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-# template="python main.py --seed 0 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-# run_commands "\${template}"
+python main.py --seed 0 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+template="python main.py --seed 0 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+run_commands "\${template}"
 
-# # Strats mimic_iii
-# python main.py --seed 1 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-# template="python main.py --seed 1 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-# run_commands "\${template}"
+# Strats mimic_iii
+python main.py --seed 1 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+template="python main.py --seed 1 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+run_commands "\${template}"
 
-# # # Strats mimic_iii
-# python main.py --seed 2 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-# template="python main.py --seed 2 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-# run_commands "\${template}"
+# Strats mimic_iii
+python main.py --seed 2 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+template="python main.py --seed 2 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+run_commands "\${template}"
 
-# # Strats mimic_iii
-# python main.py --seed 3 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-# template="python main.py --seed 3 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-# run_commands "\${template}"
+# Strats mimic_iii
+python main.py --seed 3 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+template="python main.py --seed 3 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+run_commands "\${template}"
 
-# # Strats mimic_iii
-# python main.py --seed 4 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-# template="python main.py --seed 4 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-# run_commands "\${template}"
+# Strats mimic_iii
+python main.py --seed 4 --task mortality --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+template="python main.py --seed 4 --task mortality --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+run_commands "\${template}"
 
 
 
@@ -68,9 +68,9 @@ cd src/
 # run_commands "\${template}"
 
 # Strats mimic_iii
-python main.py --seed 2 --task phenotyping --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
-template="python main.py --seed 2 --task phenotyping --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
-run_commands "\${template}"
+# python main.py --seed 2 --task phenotyping --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30
+# template="python main.py --seed 2 --task phenotyping --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-5 --load_ckpt_path /home/scratch/mingzhul/STraTS/outputs/mimic_iii/pretrain/checkpoint_best.bin"
+# run_commands "\${template}"
 
 # # Strats mimic_iii
 # python main.py --seed 3 --task phenotyping --pretrain 1 --dataset mimic_iii --model_type strats --hid_dim 64 --num_layers 2 --num_heads 16 --dropout 0.2 --attention_dropout 0.2 --lr 5e-4 --max_epochs 30

@@ -32,7 +32,14 @@ class PretrainEvaluator:
             with torch.no_grad():
                 train_loss = model(**batch)
                 num_pred = batch['forecast_mask'].sum()
-                loss += train_loss*num_pred
+                
+                
+                
+                if train_loss is not torch.nan and num_pred>0:
+                    
+                    
+                    
+                    loss += train_loss*num_pred
                 count += num_pred
         result = {'loss_neg':-(loss/count).item()}
         if train_step is not None:

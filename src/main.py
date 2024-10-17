@@ -1,5 +1,11 @@
 import argparse
 import os
+
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
+
+
 from utils import Logger, set_all_seeds
 import torch
 from dataset_pretrain import PretrainDataset
@@ -23,7 +29,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     # dataset related arguments
-    parser.add_argument('--dataset', type=str, default='physionet_2012')
+    
+    parser.add_argument('--task', type=str, default='')
+    
+    
+    parser.add_argument('--dataset', type=str, default='mimic_iii')
+    # parser.add_argument('--dataset', type=str, default='physionet_2012')
     parser.add_argument('--train_frac', type=float, default=0.5)
     parser.add_argument('--run', type=str, default='1o10')
 
@@ -34,9 +45,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--load_ckpt_path', type=str, default=None)
     ##  strats and istrats
     parser.add_argument('--max_obs', type=int, default=880)
-    parser.add_argument('--hid_dim', type=int, default=32)
+    parser.add_argument('--hid_dim', type=int, default=64)
+    # parser.add_argument('--hid_dim', type=int, default=32)
     parser.add_argument('--num_layers', type=int, default=2)
-    parser.add_argument('--num_heads', type=int, default=4)
+    parser.add_argument('--num_heads', type=int, default=16)
+    # parser.add_argument('--num_heads', type=int, default=4)
     parser.add_argument('--dropout', type=float, default=0.2)
     parser.add_argument('--attention_dropout', type=float, default=0.2)
     ## gru: hid_dim, dropout
@@ -53,10 +66,12 @@ def parse_args() -> argparse.Namespace:
 
     # training/eval realated arguments
     parser.add_argument('--pretrain', type=int, default=0)
+    # parser.add_argument('--pretrain', type=int, default=0)
     parser.add_argument('--output_dir', type=str, default=None)
     parser.add_argument('--output_dir_prefix', type=str, default='')
     parser.add_argument('--seed', type=int, default=2023)
-    parser.add_argument('--max_epochs', type=int, default=50)
+    parser.add_argument('--max_epochs', type=int, default=30)
+    # parser.add_argument('--max_epochs', type=int, default=50)
     parser.add_argument('--patience', type=int, default=10)
     parser.add_argument('--lr', type=float, default=5e-4)
     parser.add_argument('--train_batch_size', type=int, default=16)
@@ -71,16 +86,26 @@ def parse_args() -> argparse.Namespace:
 
 
 def set_output_dir(args: argparse.Namespace) -> None:
-    """Function to automatically set output dir 
+    """Function to automatically set output dir
     if it is not passed in args."""
     if args.output_dir is None:
         if args.pretrain:
-            args.output_dir = '../outputs/'+args.dataset+'/'+args.output_dir_prefix+'pretrain/'
+            # args.output_dir = '../outputs/'+args.dataset+'/'+args.output_dir_prefix+'pretrain/'
+
+
+            args.output_dir = '/home/scratch/mingzhul/STraTS/outputs/'+args.dataset+'/'+args.output_dir_prefix+'pretrain/'
+
+
         else:
             if args.load_ckpt_path is not None:
                 args.output_dir_prefix = 'finetune_'+args.output_dir_prefix
-            args.output_dir = '../outputs/'+args.dataset+'/'+args.output_dir_prefix
-            args.output_dir += args.model_type 
+            # args.output_dir = '../outputs/'+args.dataset+'/'+args.output_dir_prefix
+
+
+            args.output_dir = '/home/scratch/mingzhul/STraTS/outputs/'+args.dataset+'/'+args.output_dir_prefix
+
+
+            args.output_dir += args.model_type
             if args.model_type=='strats':
                 for param in ['num_layers', 'hid_dim', 'num_heads', 'dropout', 'attention_dropout', 'lr']:
                     args.output_dir += ','+param+':'+str(getattr(args, param))
@@ -99,10 +124,75 @@ if __name__ == "__main__":
     args.logger.write('\n'+str(args))
     args.device = torch.device('cuda')
     set_all_seeds(args.seed+int(args.run.split('o')[0]))
+    
+    
+    # set_all_seeds(args.seed)
+    
+    
+    
     model_path_best = os.path.join(args.output_dir, 'checkpoint_best.bin')
 
+
     # load data
-    dataset = PretrainDataset(args) if args.pretrain==1 else Dataset(args)
+    # dataset = PretrainDataset(args) if args.pretrain==1 else Dataset(args)
+    # args.out_dim = 1
+
+    # NOTE: specify these two args
+    # task = 'mortality'
+    # task = 'phenotyping'
+
+    # args.loss = 'bce'
+    args.loss = 'focal'
+
+
+    task = args.task
+
+
+    import sys
+    sys.path.append('/zfsauton2/home/mingzhul/time-series-prompt/src/momentfm')
+    sys.path.append('/zfsauton2/home/mingzhul/time-series-prompt/src')
+    from momentfm.utils.utils import control_randomness
+    from ts_datasets import MIMIC_mortality_STraTS, MIMIC_phenotyping_STraTS, MIMIC_pretrain_pheno_STraTS, MIMIC_pretrain_mortality_STraTS
+
+    if args.pretrain:
+        if task == 'phenotyping':
+            dataset = MIMIC_pretrain_pheno_STraTS(args.train_batch_size, equal_length=False, small_part=True, ordinal=True, seed=args.seed)
+        elif task == 'mortality':
+            dataset = MIMIC_pretrain_mortality_STraTS(args.train_batch_size, equal_length=False, small_part=True, ordinal=True, seed=args.seed)
+        else:
+            raise ValueError('task not recognized')
+        args.out_dim = dataset.n_channels
+    else:
+        if task == 'phenotyping':
+            dataset = MIMIC_phenotyping_STraTS(args.train_batch_size,
+                                               equal_length=False, 
+                                               small_part=True, 
+                                               ordinal=True,
+                                               seed=args.seed)
+        elif task == 'mortality':
+            dataset = MIMIC_mortality_STraTS(args.train_batch_size, 
+                                             equal_length=False, 
+                                             small_part=True, 
+                                             ordinal=True,
+                                             seed=args.seed)
+        else:
+            raise ValueError('task not recognized')
+
+        # 0s / 1s
+        labels = np.array(dataset.raw['data'][1])[dataset.splits['train']]
+        proportion = torch.tensor((len(labels) - np.sum(labels, axis=0)) / np.sum(labels, axis=0), device=args.device)
+        args.pos_class_weight = proportion
+        args.out_dim = dataset.num_classes
+        
+    
+    args.D = 0  # static features
+    
+    # TODO: shouldn't this be n_channels-1, since there's no timestamp?
+    args.V = dataset.n_channels
+
+
+
+
 
     # load model
     model_class = {'strats':Strats, 'istrats':Strats, 'gru':GRU_TS, 'tcn':TCN_TS,
@@ -117,6 +207,8 @@ if __name__ == "__main__":
             if k in curr_state_dict:
                 curr_state_dict[k] = v
         model.load_state_dict(curr_state_dict)
+
+    print(model)
 
     # training loop
     num_train = len(dataset.splits['train'])
@@ -140,7 +232,7 @@ if __name__ == "__main__":
         if not(args.pretrain):
             evaluator.evaluate(model, dataset, 'eval_train', train_step=-1)
             evaluator.evaluate(model, dataset, 'test', train_step=-1)
-    
+
     model.train()
     for step in train_bar:
         # load batch
@@ -196,7 +288,7 @@ if __name__ == "__main__":
                 if wait==0:
                     args.logger.write('Patience reached')
                     break
-    
+
     # print final res
     args.logger.write('Final val res: '+str(best_val_res))
     args.logger.write('Final test res: '+str(best_test_res))

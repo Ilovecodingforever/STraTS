@@ -8,8 +8,16 @@ import os
 
 class Dataset:
     def __init__(self, args) -> None:
+
+        # pheno or mortality prediction
+        # task = args.task
+        task = 'mortality'
+        filepath = '/zfsauton2/home/mingzhul/time-series-prompt/data/'+args.dataset+'.pkl'
+
+
+
         # read data
-        filepath = '../data/processed/'+args.dataset+'.pkl'
+        # filepath = '../data/processed/'+args.dataset+'.pkl'
         data, oc, train_ids, val_ids, test_ids = pickle.load(open(filepath,'rb'))
         run, totalruns = list(map(int, args.run.split('o')))
         num_train = int(np.ceil(args.train_frac*len(train_ids)))
@@ -22,9 +30,22 @@ class Dataset:
         static_varis = self.get_static_varis(args.dataset)
         if args.dataset=='mimic_iii':
             # Filter labeled data in first 24h and fill missing age for old patients.
-            data = data.loc[(data.minute>=0)&(data.minute<=24*60)]
+
+
+
+
+            # if task == 'phenotyping':
+            #     data = data.loc[(data.minute>=0)]
+            # elif task == 'mortality':
+            #     data = data.loc[(data.minute>=0)&(data.minute<=48*60)]
+
+
+
+
+
+            # data = data.loc[(data.minute>=0)&(data.minute<=24*60)]
             data.loc[(data.variable=='Age')&(data.value>200), 'value'] = 91.4
-            
+
         # keep variables seen in training set only
         train_variables = data.loc[data.ts_id.isin(train_ids)].variable.unique()
         all_variables = data.variable.unique()
@@ -45,7 +66,66 @@ class Dataset:
         oc = oc.loc[oc.ts_id.isin(sup_ts_ids)]
         oc['ts_ind'] = oc['ts_id'].map(ts_id_to_ind)
         oc = oc.sort_values(by='ts_ind')
-        y = np.array(oc['in_hospital_mortality'])
+
+
+
+        if task == 'phenotyping':
+            # phenotypes
+            dir = '/zfsauton2/home/mingzhul/time-series-prompt/mimic3_benchmarks/processed/phenotyping/'
+
+        elif task == 'mortality':
+            dir = '/zfsauton2/home/mingzhul/time-series-prompt/mimic3_benchmarks/processed/in-hospital-mortality/'
+            y = np.array(oc['in_hospital_mortality'])
+
+
+        # vars = ['Weight', 'Height',
+        #         'Glucose (Whole Blood)', 'Glucose (Blood)', 'Glucose (Serum)',
+        #         'DBP', 'SBP',
+        #         'GCS_verbal', 'GCS_eye', 'GCS_motor',  # NOTE: didn't find total
+        #         'Temperature',
+        #         'FiO2', 'CRR', 'MBP', 'HR', 'O2 Saturation',
+        #         'pH Urine', 'pH Blood',
+        #         'RR',
+        #         ]
+
+        # data = data.loc[data['variable'].isin(vars)]
+
+        # seed = 0 # TODO: specify seed outside of this class
+        # import random
+        # if seed is not None:
+        #     random.seed(seed)
+            
+        # for data_split in ['train', 'val', 'test']:
+        #     if task == 'phenotyping':
+        #         listfile_path = dir + data_split + '_listfile.csv'
+        #     elif task == 'mortality':
+        #         listfile_path = dir + data_split + '_listfile.csv'
+                
+        #     if data_split == 'test':
+        #         split = 0.3
+        #     elif data_split == 'train':
+        #         split = 0.6
+        #     else:
+        #         split = 0.1
+        #     load_size = int(1000 * split)  # NOTE: if this is too small, the data will be too similar
+
+        #     with open(listfile_path, "r") as lfile:
+        #         patients = lfile.readlines()
+        #     _listfile_header = patients[0]
+        #     patients = patients[1:]
+        #     random.shuffle(patients)
+        #     patients = patients[:load_size]
+            
+        #     if task == 'phenotyping':
+        #         patients = [line.split(',') for line in patients]
+        #         patients = [(mas[0], float(mas[1]), list(map(int, mas[2:]))) for mas in patients]                
+        #     elif task == 'mortality':
+        #         patients = [line.split(',') for line in patients]
+        #         patients = [(x, int(y)) for (x, y) in patients]                
+            
+        #     break
+
+        # y = np.array(oc['in_hospital_mortality'])
         N = len(sup_ts_ids)
 
         # To save
@@ -62,14 +142,14 @@ class Dataset:
         args.pos_class_weight = (num_train-num_train_pos)/num_train_pos
         args.logger.write('pos class weight: '+str(args.pos_class_weight))
         args.logger.write('% pos class in train, val, test splits: '
-                          +str([num_train_pos/num_train, 
+                          +str([num_train_pos/num_train,
                                 y[self.splits['val']].sum()/len(val_ids),
                                 y[self.splits['test']].sum()/len(test_ids)]))
-        
+
         if 'llm' in args.model_type:
             self.data = data
             return
-        
+
         # Get static data with missingness indicator.
         data = self.get_static_data(data)
 
@@ -85,7 +165,7 @@ class Dataset:
         # normalize if not aggregating, also get max_minute for strats
         args.finetune = args.load_ckpt_path is not None
         if args.finetune:
-            pt_var_path = os.path.join(os.path.dirname(args.load_ckpt_path), 
+            pt_var_path = os.path.join(os.path.dirname(args.load_ckpt_path),
                                        'pt_saved_variables.pkl')
             variables, means_stds, max_minute = pickle.load(open(pt_var_path,'rb'))
         if args.model_type in ['strats','istrats','grud','interpnet']:
@@ -97,7 +177,7 @@ class Dataset:
                 max_minute = data['minute'].max()
             data = data.merge(means_stds.reset_index(), on='variable', how='left')
             data['value'] = (data['value']-data['mean'])/data['std']
-            
+
         # prepare time series inputs
         if not(args.finetune):
             variables = data.variable.unique()
@@ -188,7 +268,7 @@ class Dataset:
             elif args.model_type=='interpnet':
                 self.times = times
                 self.holdout_masks = holdout_masks
-        
+
     def get_static_varis(self, dataset):
         if dataset=='mimic_iii':
             static_varis = ['Age', 'Gender']
@@ -250,10 +330,10 @@ class Dataset:
             return self.get_batch_interpnet(ind)
         elif self.args.model_type in ['gru', 'tcn', 'sand']:
             return {'ts':torch.FloatTensor(self.X[ind]),
-                    'demo':torch.FloatTensor(self.demo[ind]), 
+                    'demo':torch.FloatTensor(self.demo[ind]),
                     'labels':torch.FloatTensor(self.y[ind])}
-        
-        
+
+
     def get_batch_grud(self, ind):
         deltas = [self.deltas[i] for i in ind]
         values = [self.values[i] for i in ind]
@@ -263,17 +343,17 @@ class Dataset:
         pad_lens = max_timestamps-num_timestamps
         V = self.args.V
         pad_mats = [np.zeros((l,V)) for l in pad_lens]
-        deltas = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        deltas = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(deltas,pad_mats)]))
-        values = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        values = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(values,pad_mats)]))
-        masks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        masks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(masks,pad_mats)]))
-        return {'delta_t':deltas, 'x_t':values, 'm_t':masks, 
+        return {'delta_t':deltas, 'x_t':values, 'm_t':masks,
                 'seq_len':torch.LongTensor(num_timestamps),
-                'demo':torch.FloatTensor(self.demo[ind]), 
+                'demo':torch.FloatTensor(self.demo[ind]),
                 'labels':torch.FloatTensor(self.y[ind])}
-    
+
     def get_batch_interpnet(self, ind):
         times = [self.times[i] for i in ind]
         values = [self.values[i] for i in ind]
@@ -285,15 +365,15 @@ class Dataset:
         pad_lens = max_timestamps-num_timestamps
         V = self.args.V
         pad_mats = [np.zeros((l,V)) for l in pad_lens]
-        hmasks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        hmasks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(hmasks,pad_mats)]))
-        values = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        values = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(values,pad_mats)]))
-        masks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0) 
+        masks = torch.FloatTensor(np.stack([np.concatenate((delta,pad), axis=0)
                                     for delta,pad in zip(masks,pad_mats)]))
         times = torch.FloatTensor([t+[0]*p for t,p in zip(times, pad_lens)])
         return {'t':times, 'x':values, 'm':masks, 'h':hmasks,
-                'demo':torch.FloatTensor(self.demo[ind]), 
+                'demo':torch.FloatTensor(self.demo[ind]),
                 'labels':torch.FloatTensor(self.y[ind])}
 
 
@@ -313,8 +393,14 @@ class Dataset:
                 'obs_mask':obs_mask, 'demo':demo,
                 'labels':torch.FloatTensor(self.y[ind])}
 
-        
-            
-            
+
+
+
+
+
+
+
+
+
 
 

@@ -148,8 +148,14 @@ class Strats(TimeSeriesModel):
                     obs_mask = obs_mask*(1-mask_pos)
 
         # demographics embedding
-        demo_emb = self.demo_emb(demo) if self.args.model_type=='strats' \
-                    else demo
+        
+            
+        
+        # demo_emb = self.demo_emb(demo) if self.args.model_type=='strats' \
+        #             else demo
+                        
+                        
+                        
         # initial triplet embedding
         time_emb = self.cve_time(times)
         value_emb = self.cve_value(values)
@@ -168,10 +174,20 @@ class Strats(TimeSeriesModel):
         else:
             ts_emb = (contextual_emb*attention_weights).sum(dim=1)
         # concat demo and ts_emb
-        ts_demo_emb = torch.cat((ts_emb, demo_emb), dim=-1)
+        # ts_demo_emb = torch.cat((ts_emb, demo_emb), dim=-1)
+        
+        
+        ts_demo_emb = ts_emb
+        
+        
         # prediction/loss
         if self.pretrain:
             return self.forecast_final(ts_demo_emb, forecast_values, forecast_mask)
-        logits = self.binary_head(self.forecast_head(ts_demo_emb))[:,0] \
-                    if self.finetune else self.binary_head(ts_demo_emb)[:,0]
+        # TODO: why do forecast first?
+        logits = self.binary_head(self.forecast_head(ts_demo_emb)) if self.finetune else self.binary_head(ts_demo_emb)
+                    
+        # self.binary_head(self.forecast_head(ts_demo_emb))[:,0] \
+                    # if self.finetune else self.binary_head(ts_demo_emb)[:,0]
+                    
+                    
         return self.binary_cls_final(logits, labels)

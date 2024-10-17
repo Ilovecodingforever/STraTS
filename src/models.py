@@ -18,7 +18,7 @@ def count_parameters(logger: Logger, model: nn.Module):
     dtypes = {}
     for _, p in model.named_parameters():
         dtype = p.dtype
-        if dtype not in dtypes: 
+        if dtype not in dtypes:
             dtypes[dtype] = 0
         dtypes[dtype] += p.numel()
     logger.write('#params by dtype:')
@@ -30,6 +30,14 @@ class TimeSeriesModel(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super().__init__()
         self.args = args
+
+
+
+        out_dim = args.out_dim
+
+
+
+
         if args.model_type!='istrats':
             self.demo_emb = nn.Sequential(nn.Linear(args.D, args.hid_dim*2),
                                           nn.Tanh(),
@@ -39,27 +47,65 @@ class TimeSeriesModel(nn.Module):
         elif args.model_type=='sand':
             ts_demo_emb_size = args.hid_dim*args.M+args.hid_dim
         else:
-            ts_demo_emb_size = args.hid_dim*2
+            # ts_demo_emb_size = args.hid_dim*2
+
+
+            # no demo
+            ts_demo_emb_size = args.hid_dim
+
+
+
         self.pretrain = args.pretrain==1
         self.finetune = args.load_ckpt_path is not None
         if self.pretrain:
             self.forecast_head = nn.Linear(ts_demo_emb_size, args.V)
         elif self.finetune:
             self.forecast_head = nn.Linear(ts_demo_emb_size, args.V)
-            self.binary_head = nn.Linear(args.V,1)
+            # self.binary_head = nn.Linear(args.V,1)
+
+
+            self.binary_head = nn.Linear(args.V, out_dim)
+
+
+
             self.pos_class_weight = torch.tensor(args.pos_class_weight)
         else:
-            self.binary_head = nn.Linear(ts_demo_emb_size,1)
+            # self.binary_head = nn.Linear(ts_demo_emb_size,1)
+
+
+            self.binary_head = nn.Linear(ts_demo_emb_size, out_dim)
+
+
             self.pos_class_weight = torch.tensor(args.pos_class_weight)
 
     def binary_cls_final(self, logits, labels):
         if labels is not None:
-            return F.binary_cross_entropy_with_logits(logits, labels, 
-                                    pos_weight=self.pos_class_weight)
+            if self.args.loss == 'bce':
+                return F.binary_cross_entropy_with_logits(logits, labels,
+                                        pos_weight=self.pos_class_weight)
+            elif self.args.loss == 'focal':
+                import sys
+                sys.path.append('/zfsauton2/home/mingzhul/time-series-prompt/src/momentfm')
+                sys.path.append('/zfsauton2/home/mingzhul/time-series-prompt/src')
+                from train import FocalLoss
+                criterion = FocalLoss(logits=True)
+                return criterion(logits, labels)
+            else:
+                raise NotImplementedError
+
         else:
             return F.sigmoid(logits)
-        
+
     def forecast_final(self, ts_emb, forecast_values, forecast_mask):
+        
+        
+        
+        if sum(forecast_mask)==0:
+            # return torch.tensor(0.0, device=ts_emb.device)
+            return torch.tensor(torch.nan)
+        
+        
+        
+        
         pred = self.forecast_head(ts_emb) # bsz, V
         return (forecast_mask*(pred-forecast_values)**2).sum()/forecast_mask.sum()
-        
