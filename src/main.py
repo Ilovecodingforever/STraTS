@@ -2,7 +2,7 @@ import argparse
 import os
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 
 
@@ -31,6 +31,10 @@ def parse_args() -> argparse.Namespace:
     # dataset related arguments
     
     parser.add_argument('--task', type=str, default='')
+    
+    
+    
+    parser.add_argument('--device', type=str, default='cuda')
     
     
     parser.add_argument('--dataset', type=str, default='mimic_iii')
@@ -122,7 +126,7 @@ if __name__ == "__main__":
     set_output_dir(args)
     args.logger = Logger(args.output_dir, 'log.txt')
     args.logger.write('\n'+str(args))
-    args.device = torch.device('cuda')
+    args.device = torch.device(args.device)
     set_all_seeds(args.seed+int(args.run.split('o')[0]))
     
     
